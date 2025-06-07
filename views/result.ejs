@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Download Result</title>
+</head>
+<body>
+  <h2>Download Result</h2>
+
+  <div id="status">
+    <% if (downloadedFileName) { %>
+      <p><strong>Downloaded File:</strong> <%= downloadedFileName %></p>
+
+      <!-- Video preview -->
+      <video controls width="300" src="/downloads/<%= encodeURIComponent(downloadedFileName) %>"></video>
+      <br />
+
+      <!-- Download link -->
+      <a href="/downloads/<%= encodeURIComponent(downloadedFileName) %>" download>⬇️ Click here to download the video</a>
+    <% } else { %>
+      <p>⬇️ Download started, waiting for progress...</p>
+    <% } %>
+  </div>
+
+  <pre id="logs"><%= logs %></pre>
+
+  <br />
+  <a href="/">Download Another</a>
+
+  <script>
+    // Setup SSE connection to listen to progress updates
+    const evtSource = new EventSource('/progress');
+    const statusDiv = document.getElementById('status');
+    const logsPre = document.getElementById('logs');
+
+    evtSource.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+
+      if (data.progress) {
+        logsPre.textContent = 'Progress: ' + data.progress;
+      }
+
+      if (data.done) {
+        // Show the downloaded video and link dynamically
+        statusDiv.innerHTML = `
+          <p><strong>Downloaded File:</strong> ${data.downloadedFileName}</p>
+          <video controls width="300" src="/downloads/${encodeURIComponent(data.downloadedFileName)}"></video><br />
+          <a href="/downloads/${encodeURIComponent(data.downloadedFileName)}" download>⬇️ Click here to download the video</a>
+        `;
+        logsPre.textContent = 'Download complete!';
+        evtSource.close();
+      }
+    };
+  </script>
+</body>
+</html>
