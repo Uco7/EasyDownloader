@@ -56,15 +56,17 @@
   </main>
 <div class="container video-container">
 
-  <div id="status">
+  <div id="status" style="margin-top:20px;">
     <% if (downloadedFileName) { %>
       <p><strong>Downloaded File:</strong> <%= downloadedFileName %></p>
-      <video controls width="300" src="/downloads/<%= encodeURIComponent(downloadedFileName) %>"></video><br />
-      <a href="/downloads/<%= encodeURIComponent(downloadedFileName) %>" download>⬇️ Click here to download the video</a>
+      <video controls width="400" src="/downloads/<%= encodeURIComponent(downloadedFileName) %>"></video><br />
+      <a href="/downloads/<%= encodeURIComponent(downloadedFileName) %>" download>⬇️ Download video</a><br />
+      <a href="/">🔁 Download Another</a>
     <% } %>
   </div>
 
-  <pre id="logs"><%= logs %></pre>
+  <pre id="logs" style="white-space: pre-wrap; margin-top:20px;"><%= logs %></pre>
+
 <% if (downloadedFileName) { %>
   <a href="/">Download Another</a>
 <% } %>
