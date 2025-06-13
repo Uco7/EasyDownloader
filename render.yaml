@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: easy-downloader
+    env: node
+    buildCommand: npm install
+    startCommand: node app.js
+    buildFilter:
+      paths:
+        - package.json
+        - app.js
+
+  - type: worker
+    name: yt-dlp-helper
+    env: python
+    buildCommand: |
+      apt-get update && apt-get install -y ffmpeg
+      pip install -r requirements.txt
+    startCommand: echo "Ready"
+    buildFilter:
+      paths:
+        - yt_downloader.py
+        - requirements.txt

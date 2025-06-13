@@ -1,177 +1,144 @@
 // // src/controller/downloadController.js
 
-// const fs = require('fs');
 // const path = require('path');
-// const axios = require('axios');
-// const { spawn } = require('child_process');
-// const { EventEmitter } = require('events');
+// const fs = require('fs');
+// const ytdlp = require('yt-dlp-exec');
 
-// const progressEmitter = new EventEmitter();
+// const DOWNLOAD_DIR = path.join(__dirname, '../../downloads');
 
 // let downloadedFileName = '';
 // let logs = '';
 
+// // Reset state
 // const initState = () => {
 //   downloadedFileName = '';
 //   logs = '';
 // };
 
+// // Get current state
 // const getDownloadState = () => ({ downloadedFileName, logs });
 
-// const startDownload = (url, DOWNLOAD_DIR) => {
-//   if (url.includes('tiktok.com')) {
-//     axios.get(`https://tikwm.com/api/?url=${encodeURIComponent(url)}`)
-//       .then(response => {
-//         const videoLink = response.data?.data?.play;
-//         if (!videoLink) {
-//           logs = '❌ Failed to extract TikTok video URL.';
-//           progressEmitter.emit('update', { error: logs });
-//           return;
-//         }
+// // Start download
+// const startDownload = async (videoUrl) => {
+//   initState();
 
-//         const fileName = `tiktok_${Date.now()}.mp4`;
-//         const filePath = path.join(DOWNLOAD_DIR, fileName);
-
-//         axios({
-//           url: videoLink,
-//           method: 'GET',
-//           responseType: 'stream',
-//         }).then(videoStream => {
-//           const writer = fs.createWriteStream(filePath);
-//           let downloaded = 0;
-//           const total = parseInt(videoStream.headers['content-length'], 10);
-
-//           videoStream.data.on('data', chunk => {
-//             downloaded += chunk.length;
-//             const percent = ((downloaded / total) * 100).toFixed(2);
-//             progressEmitter.emit('update', { progress: percent + '%' });
-//           });
-
-//           videoStream.data.pipe(writer);
-
-//           writer.on('finish', () => {
-//             downloadedFileName = fileName;
-//             logs = '✅ TikTok video downloaded successfully!';
-//             progressEmitter.emit('update', { done: true, downloadedFileName });
-//           });
-
-//           writer.on('error', err => {
-//             logs = '❌ Failed to write video: ' + err.message;
-//             progressEmitter.emit('update', { error: logs });
-//           });
-//         });
-//       })
-//       .catch(error => {
-//         logs = '❌ TikTok download failed: ' + error.message;
-//         progressEmitter.emit('update', { error: logs });
-//       });
-
-//   } else {
-//     const outputTemplate = '%(title).60s.%(ext)s';
-//     const outputPath = path.join(DOWNLOAD_DIR, outputTemplate);
-//     const YTDLP_PATH = process.env.YTDLP_PATH;
-
-//     if (!YTDLP_PATH) {
-//       logs = '❌ YTDLP_PATH is not set in environment variables.';
-//       progressEmitter.emit('update', { error: logs });
+//   try {
+//     if (!videoUrl) {
+//       logs = '❌ No URL provided.';
 //       return;
 //     }
 
-//     const ytProcess = spawn(YTDLP_PATH, ['-o', outputPath, url]);
+//     // Ensure download directory exists
+//     if (!fs.existsSync(DOWNLOAD_DIR)) {
+//       fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
+//     }
 
-//     ytProcess.stdout.on('data', data => {
-//       const text = data.toString();
-//       logs += text;
-//       const progressMatch = text.match(/\[download\]\s+(\d+\.\d+)%/);
-//       if (progressMatch) {
-//         progressEmitter.emit('update', { progress: progressMatch[1] + '%' });
-//       }
+//     logs += '⏬ Downloading video...\n';
+
+//     const outputTemplate = path.join(DOWNLOAD_DIR, '%(title)s.%(ext)s');
+
+//     // Execute yt-dlp with options
+//     const output = await ytdlp(videoUrl, {
+//       output: outputTemplate,
+//       format: 'mp4',
 //     });
 
-//     ytProcess.stderr.on('data', data => {
-//       logs += data.toString();
-//     });
+//     logs += `✅ Video downloaded successfully!\n`;
 
-//     ytProcess.on('close', () => {
-//       const files = fs.readdirSync(DOWNLOAD_DIR);
-//       const latestFile = files
-//         .map(file => ({
-//           name: file,
-//           time: fs.statSync(path.join(DOWNLOAD_DIR, file)).mtime.getTime(),
-//         }))
-//         .sort((a, b) => b.time - a.time)[0]?.name || '';
+//     // Extract filename (basic way)
+//     const files = fs.readdirSync(DOWNLOAD_DIR);
+//     const latestFile = files
+//       .map(file => ({
+//         file,
+//         time: fs.statSync(path.join(DOWNLOAD_DIR, file)).mtime.getTime(),
+//       }))
+//       .sort((a, b) => b.time - a.time)[0];
 
-//       downloadedFileName = latestFile;
-//       progressEmitter.emit('update', { done: true, downloadedFileName });
-//     });
+//     downloadedFileName = latestFile.file;
+//     logs += `📁 Saved as: ${downloadedFileName}`;
+
+//   } catch (err) {
+//     logs += `❌ Error: ${err.message}`;
 //   }
 // };
 
 // module.exports = {
-//   progressEmitter,
-//   initState,
-//   getDownloadState,
 //   startDownload,
+//   getDownloadState,
 // };
 
-const fs = require('fs');
-const path = require('path');
+
+
+const ytdlp = require('yt-dlp-exec');
 const { EventEmitter } = require('events');
-const ytDlpExec = require('yt-dlp-exec').default || require('yt-dlp-exec');
+const path = require('path');
+const fs = require('fs');
 
 const progressEmitter = new EventEmitter();
-
-// Save downloads to ROOT /downloads folder
-const DOWNLOAD_DIR = path.join(__dirname, '..', '..', 'downloads');
-
-if (!fs.existsSync(DOWNLOAD_DIR)) {
-  fs.mkdirSync(DOWNLOAD_DIR, { recursive: true });
-}
+const DOWNLOAD_DIR = path.join(__dirname, '../../downloads');
 
 let downloadedFileName = '';
 let logs = '';
 
-const initState = () => {
+function initState() {
   downloadedFileName = '';
   logs = '';
-};
+}
 
-const getDownloadState = () => ({ downloadedFileName, logs });
+function getDownloadState() {
+  return { downloadedFileName, logs };
+}
 
-const startDownload = async (url) => {
-  console.log('Starting download for URL:', url);
+function startDownload(url) {
+  return new Promise((resolve, reject) => {
+    const outputTemplate = path.join(DOWNLOAD_DIR, '%(title)s.%(ext)s');
 
-  const outputTemplate = '%(title).60s.%(ext)s';
-  const outputPath = path.join(DOWNLOAD_DIR, outputTemplate);
+    // Use .raw() to get a real child process
+    const subprocess = ytdlp.raw(
+      url,
+      {
+        output: outputTemplate,
+        format: 'bestvideo+bestaudio',
+        noWarnings: true,
+        noPlaylist: true,
+        progress: true,
+        restrictFilenames: true,
+        quiet: false // set to false if you want minimal logs
+      }
+    );
 
-  try {
-    await ytDlpExec(url, {
-      output: outputPath,
-      format: 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4', // ✅ Force both video + audio
-      mergeOutputFormat: 'mp4',                             // ✅ Merge into MP4
-      
+    subprocess.stdout.on('data', (data) => {
+      const msg = data.toString();
+      const match = msg.match(/(\d{1,3}\.\d)%/);
+      if (match) {
+        progressEmitter.emit('update', { progress: match[1] + '%' });
+      }
+
+      // Only keep relevant lines
+      if (msg.includes('[youtube]') || msg.includes('Downloading')) {
+        logs += msg;
+      }
     });
 
-    // After completion, find the newest file
-    const files = fs.readdirSync(DOWNLOAD_DIR);
-    const latestFile = files
-      .map(file => ({
-        name: file,
-        time: fs.statSync(path.join(DOWNLOAD_DIR, file)).mtime.getTime(),
-      }))
-      .sort((a, b) => b.time - a.time)[0];
+    subprocess.stderr.on('data', (data) => {
+      const errMsg = data.toString();
 
-    if (latestFile) {
-      downloadedFileName = latestFile.name;
-      logs += `Download completed: ${downloadedFileName}\n`;
-      console.log(logs);
-    }
+      // Only capture relevant error messages
+      if (errMsg.includes('[youtube]') || errMsg.includes('ERROR') || errMsg.includes('WARNING')) {
+        logs += errMsg;
+      }
+    });
 
-  } catch (err) {
-    logs += `❌ Failed to start download: ${err.message}\n`;
-    console.error('❌ Download error:', err);
-  }
-};
+    subprocess.on('close', (code) => {
+      if (code === 0) {
+        downloadedFileName = 'Download complete!';
+        resolve('done');
+      } else {
+        reject(new Error('Download failed'));
+      }
+    });
+  });
+}
 
 module.exports = {
   startDownload,

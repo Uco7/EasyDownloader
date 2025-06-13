@@ -1,25 +1,58 @@
 
-require('dotenv').config();
-const express = require('express');
-const path = require('path');
+
+const express = require("express");
+const bodyParser=require("body-parser")
+const path = require("path");
+const { spawn } = require("child_process");
 
 const app = express();
-const port = process.env.PORT || 3000;
-
-// Define the downloads directory absolute path
-const DOWNLOAD_DIR = path.join(__dirname, 'downloads');
-
+app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/downloads', express.static(DOWNLOAD_DIR));
 
-app.set('view engine', 'ejs');
+// View engine & static files
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static("public"));
+app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
+app.get("/",(req,res)=>{
+  res.render("index")
+})
 
-// Import the router and use it as middleware
-const routes = require('./src/route/route');
-app.use('/', routes);
+app.post("/download", (req, res) => {
+  const videoURL = req.body.url;
+  const py = spawn("python", ["yt_downloader.py", videoURL]);
 
-app.listen(port, () => {
-  console.log(`✅ Server running at http://localhost:${port}`);
+  let result = "";
+
+  py.stdout.on("data", (data) => {
+    result += data.toString();
+  });
+
+  py.stderr.on("data", (err) => {
+    console.error("Python stderr:", err.toString());
+  });
+
+  py.on("close", () => {
+    try {
+      const json = JSON.parse(result.trim());
+      if (json.status === "success") {
+        res.json({
+          status: "success",
+          filename: json.filename
+        });
+      } else {
+        res.json({ status: "error", error: json.error });
+      }
+    } catch (err) {
+      console.error("❌ Failed to parse Python response:", result);
+      res.json({ status: "error", error: "An unknown error occurred." });
+    }
+  });
+});
+
+app.listen(3000, () => {
+  console.log("🚀 Server running on http://localhost:3000");
 });
 

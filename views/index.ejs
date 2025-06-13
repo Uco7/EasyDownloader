@@ -43,12 +43,71 @@
     <h1>Download Social Media Videos Easily</h1>
     <p>Paste the video URL below and hit download</p>
     <div class="input-group">
-      <form action="/download" method="post" id=" form">
-        <input type="text"     id="videoURL"  name="url"  placeholder="Enter video URL..."required />
-        <button type="submit">Download</button>
+
+  <form id="download-form">
+    <input type="text" id="url" placeholder="Paste YouTube URL" required>
+    <button type="submit">Download</button>
       </form>
+
       
         <div class="container disclaimer">
+          
+  
+
+  
+<div id="progress" style="margin-top: 10px;"></div>
+<div id="video-container" style="margin-top: 20px;"></div>
+<div id="download-btn" style="margin-top: 20px;"></div>
+
+<script>
+document.getElementById("download-form").addEventListener("submit", async function (e) {
+  e.preventDefault();
+
+  const url = document.getElementById("url").value;
+  const progress = document.getElementById("progress");
+  const videoContainer = document.getElementById("video-container");
+  const downloadBtn = document.getElementById("download-btn");
+
+  progress.textContent = "Starting download...";
+
+  try {
+    const res = await fetch("/download", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ url })
+    });
+
+    const data = await res.json();
+    console.log("Server response:", data);
+
+    if (data.status === "success") {
+      const safeFilename = encodeURIComponent(data.filename);
+      const videoPath = `/downloads/${safeFilename}`;
+      
+      progress.textContent = "Download complete!";
+      videoContainer.innerHTML = `
+        <video width="640" controls>
+          <source src="${videoPath}" type="video/mp4">
+          Your browser does not support the video tag.
+        </video>
+      `;
+
+      downloadBtn.innerHTML = `
+        <a href="${videoPath}" download class="btn">Download Video</a>
+      `;
+    } else {
+      progress.textContent = "Error: " + data.error;
+    }
+  } catch (err) {
+    console.error("❌ Frontend error:", err);
+    progress.textContent = "Request failed.";
+  }
+});
+</script>
+
+
 
     <em>By using our service you accept our <a href="">Terms </a> of Service and  Privacy <a href="">Policy</a> </em>
   </div>
@@ -57,55 +116,8 @@
 <div class="container video-container">
 
   <div id="status" style="margin-top:20px;">
-    <% if (downloadedFileName) { %>
-      <p><strong>Downloaded File:</strong> <%= downloadedFileName %></p>
-      <video controls width="400" src="/downloads/<%= encodeURIComponent(downloadedFileName) %>"></video><br />
-      <a href="/downloads/<%= encodeURIComponent(downloadedFileName) %>" download>⬇️ Download video</a><br />
-      <a href="/">🔁 Download Another</a>
-    <% } %>
-  </div>
-
-  <pre id="logs" style="white-space: pre-wrap; margin-top:20px;"><%= logs %></pre>
-
-<% if (downloadedFileName) { %>
-  <a href="/">Download Another</a>
-<% } %>
-
 
 </div>
-
-<script>
-  const evtSource = new EventSource('/progress');
-  const statusDiv = document.getElementById('status');
-  const logsPre = document.getElementById('logs');
-
-  evtSource.onmessage = function(event) {
-    const data = JSON.parse(event.data);
-
-    // Show progress only if greater than 0%
-    if (data.progress && data.progress !== '0%') {
-      logsPre.textContent = 'Progress: ' + data.progress;
-    } else {
-      logsPre.textContent = '';
-    }
-
-    if (data.done) {
-      statusDiv.innerHTML = `
-        <p><strong>Downloaded File:</strong> ${data.downloadedFileName}</p>
-        <video controls width="300" src="/downloads/${encodeURIComponent(data.downloadedFileName)}"></video><br />
-        <a href="/downloads/${encodeURIComponent(data.downloadedFileName)}" download>⬇️ Click here to download the video</a>
-        <br /><br />
-        <a href="/" style="display:inline-block; margin-top:10px;">🔁 Download Another</a>
-      `;
-      logsPre.textContent = '';
-    }
-
-    if (data.error) {
-      logsPre.textContent = data.error;
-    }
-  };
-</script>
-
     
   <div class="container social-media-container"> 
     <div class="icon-wrapper">

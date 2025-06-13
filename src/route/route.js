@@ -1,27 +1,16 @@
-
-
-// src/route/route.js
 const express = require('express');
 const router = express.Router();
-const path = require('path');
 const {
   progressEmitter,
-  initState,
   getDownloadState,
-  startDownload,
+  startDownload
 } = require('../controler/appCont');
 
-// Define DOWNLOAD_DIR relative to this file (adjust if needed)
-const DOWNLOAD_DIR = path.join(__dirname, '../../downloads');
-
-// Serve index page, reset state on load
 router.get('/', (req, res) => {
-  initState();
   const { downloadedFileName, logs } = getDownloadState();
   res.render('index', { downloadedFileName, logs });
 });
 
-// SSE endpoint for progress updates
 router.get('/progress', (req, res) => {
   res.set({
     'Cache-Control': 'no-cache',
@@ -43,18 +32,17 @@ router.get('/progress', (req, res) => {
   });
 });
 
-// POST /download - starts download then redirects (PRG pattern)
-router.post('/download', (req, res) => {
+router.post('/download', async (req, res) => {
   const url = req.body.url?.trim();
-  if (!url) {
-    return res.redirect('/');
+  if (!url) return res.redirect('/');
+
+  try {
+    await startDownload(url);
+    res.redirect('/');
+  } catch (err) {
+    console.error('Download error:', err);
+    res.redirect('/');
   }
-
-  initState();
-  startDownload(url, DOWNLOAD_DIR);
-
-  res.redirect('/');
 });
 
 module.exports = router;
-
