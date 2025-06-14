@@ -65,7 +65,7 @@ def download_video(url):
             'quiet': True,               # 👈 suppress logs
             'no_warnings': True,         # 👈 suppress warnings
             'logger': MyLogger(),        # 👈 suppress error logs too
-            'cookies': os.path.join(os.getcwd(), 'cookies', 'cookies.txt'),  # ✅ Use full path just in case
+             'cookies': os.path.join(os.getcwd(), 'cookies.txt'),
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
