@@ -1,7 +1,65 @@
 
 
+// const express = require("express");
+// const bodyParser=require("body-parser")
+// const path = require("path");
+// const { spawn } = require("child_process");
+
+// const app = express();
+// app.use(express.json());
+// app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.json());
+// app.use(express.urlencoded({ extended: true }));
+
+// // View engine & static files
+// app.set("view engine", "ejs");
+// app.set("views", path.join(__dirname, "views"));
+// app.use(express.static("public"));
+// app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
+// app.get("/",(req,res)=>{
+//   res.render("index")
+// })
+
+// app.post("/download", (req, res) => {
+//   const videoURL = req.body.url;
+//   const py = spawn("python", ["yt_downloader.py", videoURL]);
+
+//   let result = "";
+
+//   py.stdout.on("data", (data) => {
+//     result += data.toString();
+//   });
+
+//   py.stderr.on("data", (err) => {
+//     console.error("Python stderr:", err.toString());
+//   });
+
+//   py.on("close", () => {
+//     try {
+//       const json = JSON.parse(result.trim());
+//       if (json.status === "success") {
+//         res.json({
+//           status: "success",
+//           filename: json.filename
+//         });
+//       } else {
+//         res.json({ status: "error", error: json.error });
+//       }
+//     } catch (err) {
+//       console.error("❌ Failed to parse Python response:", result);
+//       res.json({ status: "error", error: "An unknown error occurred." });
+//     }
+//   });
+// });
+
+// app.listen(3000, () => {
+//   console.log("🚀 Server running on http://localhost:3000");
+// });
+
+
+
 const express = require("express");
-const bodyParser=require("body-parser")
+const bodyParser = require("body-parser");
 const path = require("path");
 const { spawn } = require("child_process");
 
@@ -11,21 +69,16 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
-// View engine & static files
+// Set view engine and static folders
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.static("public"));
-app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
-app.get("/",(req,res)=>{
-  res.render("index")
-})
-const fs = require('fs');
-// const path = require('path');
+app.use("/downloads", express.static(path.join(__dirname, "downloads")));
 
-const cookiePath = path.join(__dirname, 'cookies.txt');
-console.log('Render - Current working directory:', __dirname);
-console.log('Render - cookiePath:', cookiePath);
-console.log('Render - File exists:', fs.existsSync(cookiePath));
+app.get("/", (req, res) => {
+  res.render("index");
+});
+
 app.post("/download", (req, res) => {
   const videoURL = req.body.url;
   const py = spawn("python", ["yt_downloader.py", videoURL]);
@@ -46,7 +99,7 @@ app.post("/download", (req, res) => {
       if (json.status === "success") {
         res.json({
           status: "success",
-          filename: json.filename
+          filename: json.filename,
         });
       } else {
         res.json({ status: "error", error: json.error });
@@ -61,4 +114,3 @@ app.post("/download", (req, res) => {
 app.listen(3000, () => {
   console.log("🚀 Server running on http://localhost:3000");
 });
-

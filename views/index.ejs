@@ -55,57 +55,57 @@
   
 
   
-<div id="progress" style="margin-top: 10px;"></div>
-<div id="video-container" style="margin-top: 20px;"></div>
-<div id="download-btn" style="margin-top: 20px;"></div>
 
-<script>
-document.getElementById("download-form").addEventListener("submit", async function (e) {
-  e.preventDefault();
+  <div id="progress" style="margin-top: 15px;"></div>
+  <div id="video-container" style="margin-top: 20px;"></div>
+  <div id="download-btn" style="margin-top: 20px;"></div>
 
-  const url = document.getElementById("url").value;
-  const progress = document.getElementById("progress");
-  const videoContainer = document.getElementById("video-container");
-  const downloadBtn = document.getElementById("download-btn");
+  <script>
+    document.getElementById("download-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
 
-  progress.textContent = "Starting download...";
+      const url = document.getElementById("url").value;
+      const progress = document.getElementById("progress");
+      const videoContainer = document.getElementById("video-container");
+      const downloadBtn = document.getElementById("download-btn");
 
-  try {
-    const res = await fetch("/download", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({ url })
+      progress.textContent = "⏳ Downloading... Please wait...";
+      videoContainer.innerHTML = "";
+      downloadBtn.innerHTML = "";
+
+      try {
+        const res = await fetch("/download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url })
+        });
+
+        const data = await res.json();
+
+        if (data.status === "success") {
+          const safeFilename = encodeURIComponent(data.filename);
+          const videoPath = `/downloads/${safeFilename}`;
+
+          progress.textContent = "✅ Download complete!";
+          videoContainer.innerHTML = `
+            <video width="640" controls>
+              <source src="${videoPath}" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          `;
+
+          downloadBtn.innerHTML = `
+            <a href="${videoPath}" download class="btn">⬇️ Download Video</a>
+          `;
+        } else {
+          progress.textContent = "❌ Error: " + data.error;
+        }
+      } catch (err) {
+        console.error("Frontend error:", err);
+        progress.textContent = "❌ Request failed.";
+      }
     });
-
-    const data = await res.json();
-    console.log("Server response:", data);
-
-    if (data.status === "success") {
-      const safeFilename = encodeURIComponent(data.filename);
-      const videoPath = `/downloads/${safeFilename}`;
-      
-      progress.textContent = "Download complete!";
-      videoContainer.innerHTML = `
-        <video width="640" controls>
-          <source src="${videoPath}" type="video/mp4">
-          Your browser does not support the video tag.
-        </video>
-      `;
-
-      downloadBtn.innerHTML = `
-        <a href="${videoPath}" download class="btn">Download Video</a>
-      `;
-    } else {
-      progress.textContent = "Error: " + data.error;
-    }
-  } catch (err) {
-    console.error("❌ Frontend error:", err);
-    progress.textContent = "Request failed.";
-  }
-});
-</script>
+  </script>
 
 
 

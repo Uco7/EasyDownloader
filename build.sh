@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
 
-# For Render - installs ffmpeg
-apt-get update && apt-get install -y ffmpeg
+# Install system dependencies
+apt-get update && apt-get install -y ffmpeg python3 python3-pip
+
+# Install yt-dlp via pip
+pip3 install yt-dlp

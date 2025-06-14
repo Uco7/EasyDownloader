@@ -61,11 +61,12 @@ def download_video(url):
 
         ydl_opts = {
             'outtmpl': os.path.join(output_dir, '%(title).70s.%(ext)s'),
-            'format': 'mp4',
-            'quiet': True,               # 👈 suppress logs
-            'no_warnings': True,         # 👈 suppress warnings
-            'logger': MyLogger(),        # 👈 suppress error logs too
-            'cookies': 'cookies.txt',  # ✅ fixed path
+            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+            'quiet': True,
+            'no_warnings': True,
+            'logger': MyLogger(),
+            'cookies': 'cookies.txt',  # Optional
+            'merge_output_format': 'mp4'
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
