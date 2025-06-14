@@ -19,7 +19,13 @@ app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
 app.get("/",(req,res)=>{
   res.render("index")
 })
+const fs = require('fs');
+// const path = require('path');
 
+const cookiePath = path.join(__dirname, 'cookies.txt');
+console.log('Render - Current working directory:', __dirname);
+console.log('Render - cookiePath:', cookiePath);
+console.log('Render - File exists:', fs.existsSync(cookiePath));
 app.post("/download", (req, res) => {
   const videoURL = req.body.url;
   const py = spawn("python", ["yt_downloader.py", videoURL]);
