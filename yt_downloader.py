@@ -105,15 +105,26 @@ def download_video(url):
         os.makedirs(output_dir, exist_ok=True)
 
         ydl_opts = {
-            'outtmpl': os.path.join(output_dir, '%(title).70s.%(ext)s'),
-            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
-            'merge_output_format': 'mp4',
-            'noplaylist': True,
-            'quiet': False,
-                'cookiefile': 'cookies.txt',  # optional, only if needed
+            # 'outtmpl': os.path.join(output_dir, '%(title).70s.%(ext)s'),
+            # 'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
+            # 'merge_output_format': 'mp4',
+            # 'noplaylist': True,
+            # 'quiet': False,
 
-            'nocheckcertificate': True,
-            'logger': MyLogger(),
+            # 'nocheckcertificate': True,
+            #     'cookiefile': 'cookies.txt',  # optional, only if needed
+            # 'logger': MyLogger(),
+
+            
+    'outtmpl': os.path.join(output_dir, '%(title).70s.%(ext)s'),
+    'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/mp4',
+    'merge_output_format': 'mp4',
+    'noplaylist': True,
+    'quiet': False,
+    'nocheckcertificate': True,
+    'cookiefile': 'cookies.txt',  # optional, only if needed
+    'logger': MyLogger(),
+            
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
