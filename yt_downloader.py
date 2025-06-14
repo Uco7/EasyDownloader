@@ -59,15 +59,30 @@ def download_video(url):
         output_dir = os.path.join(os.getcwd(), "downloads")
         os.makedirs(output_dir, exist_ok=True)
 
+        # ydl_opts = {
+        #     'outtmpl': os.path.join(output_dir, '%(title).70s.%(ext)s'),
+        #     'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+        #     'quiet': True,
+        #     'no_warnings': True,
+        #     'logger': MyLogger(),
+        #     'cookies': 'cookies.txt',  # Optional
+        #     'merge_output_format': 'mp4'
+        # }
         ydl_opts = {
-            'outtmpl': os.path.join(output_dir, '%(title).70s.%(ext)s'),
-            'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
-            'quiet': True,
-            'no_warnings': True,
-            'logger': MyLogger(),
-            'cookies': 'cookies.txt',  # Optional
-            'merge_output_format': 'mp4'
-        }
+'outtmpl': 'downloads/%(title).70s.%(ext)s',
+        'format': 'bestvideo+bestaudio/best',
+        'merge_output_format': 'mp4',
+        'cookies': 'cookies.txt',  # Make sure this path is correct
+        'noplaylist': True,
+        'quiet': False,
+        'nocheckcertificate': True,
+        'logger': MyLogger(),
+}
+
+
+     
+
+
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
