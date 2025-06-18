@@ -7,6 +7,9 @@ const app = express();
 app.use(express.static('public'));
 app.use('/downloads', express.static('downloads'));
 app.use(express.urlencoded({ extended: true }));
+app.get("/",(req,res)=>{
+  res.render("index")
+})
 
 app.post('/download', (req, res) => {
   const url = req.body.url;
