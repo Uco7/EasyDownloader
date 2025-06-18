@@ -49,15 +49,19 @@
     <button type="submit">Download</button>
       </form>
 
-  <div id="result"></div>
+
+  <div id="status"></div>
+  <video id="videoPlayer" controls style="display: none;"></video>
 
   <script>
     const form = document.getElementById('download-form');
-    const resultDiv = document.getElementById('result');
+    const status = document.getElementById('status');
+    const videoPlayer = document.getElementById('videoPlayer');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      resultDiv.innerHTML = '⏳ Downloading...';
+      status.textContent = 'Downloading...';
+      videoPlayer.style.display = 'none';
 
       const formData = new FormData(form);
       const url = formData.get('url');
@@ -69,11 +73,15 @@
       });
 
       const result = await response.json();
-
       if (result.status === 'success') {
-        resultDiv.innerHTML = `<a href="${result.downloadUrl}" download>✅ Download Ready – Click Here</a>`;
+        const videoUrl = result.downloadUrl;
+        status.textContent = 'Download complete!';
+        videoPlayer.src = videoUrl;
+        videoPlayer.style.display = 'block';
+        videoPlayer.load();
+        videoPlayer.play();
       } else {
-        resultDiv.innerHTML = `❌ Error: ${result.error}`;
+        status.textContent = `❌ Error: ${result.error}`;
       }
     });
   </script>
