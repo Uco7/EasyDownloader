@@ -1,4 +1,3 @@
-
 import sys
 import os
 import json
@@ -46,23 +45,19 @@ def download_video(url):
             'merge_output_format': 'mp4',
             'noplaylist': True,
             'quiet': False,
-
             'nocheckcertificate': True,
-                # 'cookiefile': 'cookies.txt',  # optional, only if needed
-                'cookiesfrombrowser': ('chrome',),
-
             'logger': MyLogger(),
-
-    
-            
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
+
+            if 'requested_downloads' not in info:
+                raise Exception("Video not available for download.")
+
             original_filename = ydl.prepare_filename(info)
             reencoded_filename = original_filename.replace(".mp4", "_h264.mp4")
 
-            # Re-encode to H.264
             if reencode_to_h264(original_filename, reencoded_filename):
                 os.remove(original_filename)  # optional: remove original
                 print(json.dumps({
@@ -74,6 +69,18 @@ def download_video(url):
                     "status": "error",
                     "error": "Failed to re-encode video"
                 }))
+    except yt_dlp.utils.DownloadError as e:
+        error_msg = str(e)
+        if "Sign in to confirm your age" in error_msg or "login" in error_msg.lower():
+            print(json.dumps({
+                "status": "error",
+                "error": "This video is age-restricted or login-protected and cannot be downloaded."
+            }))
+        else:
+            print(json.dumps({
+                "status": "error",
+                "error": error_msg
+            }))
     except Exception as e:
         print(json.dumps({
             "status": "error",
@@ -85,4 +92,3 @@ if __name__ == "__main__":
         print(json.dumps({"status": "error", "error": "No URL provided"}))
     else:
         download_video(sys.argv[1])
-
