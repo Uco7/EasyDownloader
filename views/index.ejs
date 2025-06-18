@@ -51,17 +51,22 @@
 
 
   <div id="status"></div>
+  
   <video id="videoPlayer" controls style="display: none;"></video>
+  <br />
+  <a id="downloadLink" href="#" download style="display: none;">⬇️ Download Video</a>
 
   <script>
     const form = document.getElementById('download-form');
     const status = document.getElementById('status');
     const videoPlayer = document.getElementById('videoPlayer');
+    const downloadLink = document.getElementById('downloadLink');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      status.textContent = 'Downloading...';
+      status.textContent = '⏳ Downloading...';
       videoPlayer.style.display = 'none';
+      downloadLink.style.display = 'none';
 
       const formData = new FormData(form);
       const url = formData.get('url');
@@ -75,11 +80,15 @@
       const result = await response.json();
       if (result.status === 'success') {
         const videoUrl = result.downloadUrl;
-        status.textContent = 'Download complete!';
+        status.textContent = '✅ Download complete!';
         videoPlayer.src = videoUrl;
         videoPlayer.style.display = 'block';
         videoPlayer.load();
         videoPlayer.play();
+
+        downloadLink.href = videoUrl;
+        downloadLink.download = videoUrl.split('/').pop(); // auto filename
+        downloadLink.style.display = 'inline-block';
       } else {
         status.textContent = `❌ Error: ${result.error}`;
       }
