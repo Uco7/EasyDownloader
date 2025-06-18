@@ -48,7 +48,9 @@ def download_video(url):
             'quiet': False,
 
             'nocheckcertificate': True,
-                'cookiefile': 'cookies.txt',  # optional, only if needed
+                # 'cookiefile': 'cookies.txt',  # optional, only if needed
+                'cookiesfrombrowser': ('chrome',),
+
             'logger': MyLogger(),
 
     
