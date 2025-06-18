@@ -44,69 +44,33 @@
     <p>Paste the video URL below and hit download</p>
     <div class="input-group">
 
-  <form id="download-form">
+  <form id="downloadForm">
     <input type="text" id="url" placeholder="Paste YouTube URL" required>
     <button type="submit">Download</button>
       </form>
 
-      
-        <div class="container disclaimer">
-          
-  
-
-  
-
-  <div id="progress" style="margin-top: 15px;"></div>
-  <div id="video-container" style="margin-top: 20px;"></div>
-  <div id="download-btn" style="margin-top: 20px;"></div>
+        <div id="status"></div>
 
   <script>
-    document.getElementById("download-form").addEventListener("submit", async function (e) {
+    document.getElementById('downloadForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const form = e.target;
+      const url = form.url.value;
+      const res = await fetch('/download', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `url=${encodeURIComponent(url)}`
+      });
+      const data = await res.json();
+      const status = document.getElementById('status');
 
-      const url = document.getElementById("url").value;
-      const progress = document.getElementById("progress");
-      const videoContainer = document.getElementById("video-container");
-      const downloadBtn = document.getElementById("download-btn");
-
-      progress.textContent = "⏳ Downloading... Please wait...";
-      videoContainer.innerHTML = "";
-      downloadBtn.innerHTML = "";
-
-      try {
-        const res = await fetch("/download", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ url })
-        });
-
-        const data = await res.json();
-
-        if (data.status === "success") {
-          const safeFilename = encodeURIComponent(data.filename);
-          const videoPath = `/downloads/${safeFilename}`;
-
-          progress.textContent = "✅ Download complete!";
-          videoContainer.innerHTML = `
-            <video width="640" controls>
-              <source src="${videoPath}" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          `;
-
-          downloadBtn.innerHTML = `
-            <a href="${videoPath}" download class="btn">⬇️ Download Video</a>
-          `;
-        } else {
-          progress.textContent = "❌ Error: " + data.error;
-        }
-      } catch (err) {
-        console.error("Frontend error:", err);
-        progress.textContent = "❌ Request failed.";
+      if (data.status === 'success') {
+        status.innerHTML = `<a href="${data.downloadUrl}" download>🎉 Click to Download</a>`;
+      } else {
+        status.innerText = `❌ Error: ${data.error}`;
       }
     });
   </script>
-
 
 
     <em>By using our service you accept our <a href="">Terms </a> of Service and  Privacy <a href="">Policy</a> </em>

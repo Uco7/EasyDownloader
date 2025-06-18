@@ -1,116 +1,35 @@
-
-
-// const express = require("express");
-// const bodyParser=require("body-parser")
-// const path = require("path");
-// const { spawn } = require("child_process");
-
-// const app = express();
-// app.use(express.json());
-// app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(bodyParser.json());
-// app.use(express.urlencoded({ extended: true }));
-
-// // View engine & static files
-// app.set("view engine", "ejs");
-// app.set("views", path.join(__dirname, "views"));
-// app.use(express.static("public"));
-// app.use('/downloads', express.static(path.join(__dirname, 'downloads')));
-// app.get("/",(req,res)=>{
-//   res.render("index")
-// })
-
-// app.post("/download", (req, res) => {
-//   const videoURL = req.body.url;
-//   const py = spawn("python", ["yt_downloader.py", videoURL]);
-
-//   let result = "";
-
-//   py.stdout.on("data", (data) => {
-//     result += data.toString();
-//   });
-
-//   py.stderr.on("data", (err) => {
-//     console.error("Python stderr:", err.toString());
-//   });
-
-//   py.on("close", () => {
-//     try {
-//       const json = JSON.parse(result.trim());
-//       if (json.status === "success") {
-//         res.json({
-//           status: "success",
-//           filename: json.filename
-//         });
-//       } else {
-//         res.json({ status: "error", error: json.error });
-//       }
-//     } catch (err) {
-//       console.error("❌ Failed to parse Python response:", result);
-//       res.json({ status: "error", error: "An unknown error occurred." });
-//     }
-//   });
-// });
-
-// app.listen(3000, () => {
-//   console.log("🚀 Server running on http://localhost:3000");
-// });
-
-
-
-const express = require("express");
-const bodyParser = require("body-parser");
-const path = require("path");
-const { spawn } = require("child_process");
-
+// server.js
+const express = require('express');
+const { execFile } = require('child_process');
+const path = require('path');
 const app = express();
-app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+
+app.use(express.static('public'));
+app.use('/downloads', express.static('downloads'));
 app.use(express.urlencoded({ extended: true }));
 
-// Set view engine and static folders
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-app.use(express.static("public"));
-app.use("/downloads", express.static(path.join(__dirname, "downloads")));
+app.post('/download', (req, res) => {
+  const url = req.body.url;
 
-app.get("/", (req, res) => {
-  res.render("index");
-});
+  execFile('python', ['downloader.py', url], (error, stdout, stderr) => {
+    if (error) {
+      return res.json({ status: 'error', error: stderr || error.message });
+    }
 
-app.post("/download", (req, res) => {
-  const videoURL = req.body.url;
-  const py = spawn("python", ["yt_downloader.py", videoURL]);
-
-  let result = "";
-
-  py.stdout.on("data", (data) => {
-    result += data.toString();
-  });
-
-  py.stderr.on("data", (err) => {
-    console.error("Python stderr:", err.toString());
-  });
-
-  py.on("close", () => {
     try {
-      const json = JSON.parse(result.trim());
-      if (json.status === "success") {
-        res.json({
-          status: "success",
-          filename: json.filename,
+      const result = JSON.parse(stdout);
+      if (result.status === 'success') {
+        return res.json({
+          status: 'success',
+          downloadUrl: `/downloads/${encodeURIComponent(result.filename)}`
         });
       } else {
-        res.json({ status: "error", error: json.error });
+        return res.json(result);
       }
     } catch (err) {
-      console.error("❌ Failed to parse Python response:", result);
-      res.json({ status: "error", error: "An unknown error occurred." });
+      return res.json({ status: 'error', error: 'Invalid response from Python script.' });
     }
   });
 });
 
-app.listen(3000, () => {
-  console.log("🚀 Server running on http://localhost:3000");
-});
+app.listen(3000, () => console.log('🚀 Server running on http://localhost:3000'));
