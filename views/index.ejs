@@ -44,34 +44,39 @@
     <p>Paste the video URL below and hit download</p>
     <div class="input-group">
 
-  <form id="downloadForm">
-    <input type="text" id="url" placeholder="Paste YouTube URL" required>
+  <form id="download-form">
+    <input type="text" id="url" name="url" placeholder="Paste YouTube URL" required>
     <button type="submit">Download</button>
       </form>
 
-        <div id="status"></div>
+  <div id="result"></div>
 
   <script>
-    document.getElementById('downloadForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const url = form.url.value;
-      const res = await fetch('/download', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        body: `url=${encodeURIComponent(url)}`
-      });
-      const data = await res.json();
-      const status = document.getElementById('status');
+    const form = document.getElementById('download-form');
+    const resultDiv = document.getElementById('result');
 
-      if (data.status === 'success') {
-        status.innerHTML = `<a href="${data.downloadUrl}" download>🎉 Click to Download</a>`;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resultDiv.innerHTML = '⏳ Downloading...';
+
+      const formData = new FormData(form);
+      const url = formData.get('url');
+
+      const response = await fetch('/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ url })
+      });
+
+      const result = await response.json();
+
+      if (result.status === 'success') {
+        resultDiv.innerHTML = `<a href="${result.downloadUrl}" download>✅ Download Ready – Click Here</a>`;
       } else {
-        status.innerText = `❌ Error: ${data.error}`;
+        resultDiv.innerHTML = `❌ Error: ${result.error}`;
       }
     });
   </script>
-
 
     <em>By using our service you accept our <a href="">Terms </a> of Service and  Privacy <a href="">Policy</a> </em>
   </div>
@@ -158,8 +163,8 @@
   <script src="script.js"></script>
 
   <script>
-    const form=document.getElementById("form")
-    form.addEventListener("click",(e)=>{
+    const fo=document.getElementById("form")
+    fo.addEventListener("click",(e)=>{
 e.preventDefault()
 
       const navLinks = document.getElementById('navLinks');

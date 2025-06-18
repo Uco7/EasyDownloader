@@ -1,4 +1,3 @@
-# downloader.py
 import sys
 import os
 import json
@@ -15,15 +14,24 @@ def download_video(url):
         'noplaylist': True,
         'quiet': True,
         'cookiefile': './cookies/cookies.txt',
+        'logger': MyLogger(),
     }
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             filename = ydl.prepare_filename(info)
-            print(json.dumps({"status": "success", "filename": os.path.basename(filename)}))
+            result = {"status": "success", "filename": os.path.basename(filename)}
     except Exception as e:
-        print(json.dumps({"status": "error", "error": str(e)}))
+        result = {"status": "error", "error": str(e)}
+
+    print(json.dumps(result))  # ✅ ONLY print JSON once
+
+# Optional: Disable yt_dlp logs
+class MyLogger:
+    def debug(self, msg): pass
+    def warning(self, msg): pass
+    def error(self, msg): pass
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
